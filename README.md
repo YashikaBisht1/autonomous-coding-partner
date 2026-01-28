@@ -9,10 +9,10 @@ An advanced, self-healing Autonomous Development Environment (ADE) wrapped in a 
 
 ## � SYSTEM_OVERVIEW // VISUALS
 
-| Dashboard Execution | Agent Console (Live) |
+| Dashboard Execution |
 | :---: | :---: |
-| ![Dashboard Screenshot]<img width="1887" height="961" alt="image" src="https://github.com/user-attachments/assets/0bcf057f-0240-44e8-9df9-1459b1c850d3" />
- | ![Console Screenshot]<img width="1818" height="984" alt="image" src="https://github.com/user-attachments/assets/531cb32c-d758-4393-9f58-b24bdebdb3ce" />
+| [Dashboard Screenshot]<img width="1887" height="961" alt="image" src="https://github.com/user-attachments/assets/0bcf057f-0240-44e8-9df9-1459b1c850d3" />
+ | [Console Screenshot]<img width="1818" height="984" alt="image" src="https://github.com/user-attachments/assets/531cb32c-d758-4393-9f58-b24bdebdb3ce" />
  |
 
 ---
