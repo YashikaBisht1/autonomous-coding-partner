@@ -1,32 +1,92 @@
-# 🤖 Autonomous Coding Partner
+# 🌌 Autonomous Coding Partner: Cyberpunk IDE Edition
 
-An AI-powered system that generates complete software projects from natural language descriptions using Groq AI.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Powered by Groq](https://img.shields.io/badge/AI-Groq%20Llama%203.3-ff007f)](https://groq.com/)
 
-## 🚀 Features
+An advanced, self-healing Autonomous Development Environment (ADE) wrapped in a high-octane Cyberpunk aesthetic. This isn't just a code generator; it's a team of AI agents that plan, write, test, and fix your code in real-time.
 
-- **Natural Language to Code**: Describe your project in plain English
-- **Multi-Agent System**: Planner, Developer, Tester, and Fixer agents
-- **Real-time Progress**: WebSocket updates during generation
-- **Full Stack Projects**: Generates backend, frontend, and configuration files
-- **Docker Ready**: Containerized with Docker Compose
-- **REST API**: FastAPI backend with OpenAPI documentation
+---
 
-## 🛠️ Tech Stack
+## � SYSTEM_OVERVIEW // VISUALS
 
-### Backend
-- **FastAPI**: Python web framework
-- **Groq API**: LLM for code generation (Llama 3 70B/Mixtral)
-- **WebSocket**: Real-time communication
-- **Docker**: Containerization
+> [!TIP]
+> **User Instruction:** To add your own screenshots, place your images in a folder (e.g., `./assets/`) and update the paths below.
 
-### Frontend
-- **React**: User interface
-- **Vite**: Build tool
-- **WebSocket**: Real-time updates
+| Dashboard Execution | Agent Console (Live) |
+| :---: | :---: |
+| ![Dashboard Screenshot](https://via.placeholder.com/400x250.png?text=Add+Dashboard+Screenshot+Here) | ![Console Screenshot](https://via.placeholder.com/400x250.png?text=Add+Console+Screenshot+Here) |
 
-## 📦 Installation
+---
 
-### 1. Clone the Repository
+## 🔥 KEY_FEATURES
+
+### 🧠 Multi-Agent Orchestration
+- **Planner Agent**: Architecting complex blueprints from simple prompts.
+- **Developer Agent**: Generating production-ready code across multiple stacks.
+- **Tester Agent**: Autonomously creating unit tests for every file.
+- **Fixer Agent**: Real-time debugging and self-healing when tests fail.
+
+### 🌍 Multi-Stack Agnostic
+- Full support for **Python**, **Node.js (JS/TS)**, and **Go**.
+- **Auto-Dependency Management**: The agents detect required libraries and run `pip install` or `npm install` automatically in the background.
+
+### ⚡ Cyberpunk UI/UX
+- VS Code inspired **Integrated Terminal**.
+- Glassmorphic panels with Neopink glow effects.
+- Real-time updates via **WebSockets** for zero-latency feedback.
+
+---
+
+## 🛠️ TECH_STACK
+
+- **Core**: Python 3.11+, FastAPI, React 18
+- **AI Engine**: Llama 3.3 (70b) via Groq API
+- **Real-time**: WebSockets (Python `websockets` + React Hooks)
+- **Infrastructure**: Docker & Docker Compose
+- **Styling**: Vanilla CSS with Cyberpunk Motion Effects
+
+---
+
+## 🚀 BOOT_SEQUENCE
+
+### 1. Clone the Mission
 ```bash
-git clone <repository-url>
+git clone https://github.com/yashikabisht1/autonomous-coding-partner.git
 cd autonomous-coding-partner
+```
+
+### 2. Configure Credentials
+Create a `.env` file in the root directory:
+```env
+GROQ_API_KEY=your_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+### 3. Execution (Docker)
+```bash
+docker-compose up --build
+```
+*Wait for the neons to light up. Access the IDE at [http://localhost:3000](http://localhost:3000)*
+
+---
+
+## 📖 LESSONS_LEARNED
+
+This project served as a deep-dive into:
+- Efficient **Async/Await** patterns in Python.
+- Multi-agent communication and state synchronization.
+- AI **Self-Healing** loops and diagnostic feedback.
+- [Read the full Developer Lessons Guide here](./brain/developer_lessons.md).
+
+---
+
+## 🤝 CONTRIBUTING // PROTOCOLS
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+*Built with ♥ by [yashikabisht1](https://github.com/yashikabisht1) • Powered by Neural Networks*
