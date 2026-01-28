@@ -78,6 +78,17 @@ This project served as a deep-dive into:
 
 ---
 
+## 🚦 TROUBLESHOOTING // RATE_LIMITS
+
+### Groq API Token Limits (Error 429)
+The free tier of Groq has specific limits on **Tokens Per Day (TPD)**. If you generate several complex projects in a row, you may see a "Rate Limit Reached" error.
+
+- **Effect**: Project generation will halt and mark the status as `FAILED`.
+- **Solution**: Wait for the time specified in the error message (usually 10-15 minutes) for your quota to reset.
+- **Robustness**: The system is engineered to fail gracefully—it will never save error messages into your source code files.
+
+---
+
 ## 🤝 CONTRIBUTING // PROTOCOLS
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
