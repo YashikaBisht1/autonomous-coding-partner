@@ -15,3 +15,13 @@ export const getProjectStatus = async (projectId) => {
   const response = await fetch(`${API_URL}/projects/${projectId}`);
   return response.json();
 };
+
+export const listProjects = async () => {
+  const response = await fetch(`${API_URL}/projects`);
+  return response.json();
+};
+
+export const getConfig = async () => {
+  const response = await fetch(`${API_URL}/config`);
+  return response.json();
+};

@@ -50,8 +50,8 @@ function AgentConsole({ logs }) {
       >
         {logs.length === 0 ? (
           <div style={{ color: '#444', fontStyle: 'italic' }}>
-            > INITIALIZING SYSTEM...<br />
-            > WAITING FOR INPUT...
+            {"> "} INITIALIZING SYSTEM...<br />
+            {"> "} WAITING FOR INPUT...
           </div>
         ) : (
           logs.map((log, index) => (

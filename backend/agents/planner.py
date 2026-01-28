@@ -32,22 +32,24 @@ class PlannerAgent:
             "estimated_time": "2 hours"
         }"""
     
-    async def create_plan(self, project_goal: str, project_name: str) -> Dict[str, Any]:
+    async def create_plan(self, project_goal: str, project_name: str, tech_stack: List[str] = None) -> Dict[str, Any]:
         """
         Create a detailed project plan
         """
         logger.info(f"Planning project: {project_name}")
+        stack_str = ", ".join(tech_stack) if tech_stack else "Python (Default)"
         
         prompt = f"""
         PROJECT NAME: {project_name}
         PROJECT GOAL: {project_goal}
+        PREFERRED TECH STACK: {stack_str}
         
         Create a complete development plan with:
         
         1. TASKS: List of specific, actionable tasks in correct order
-        2. FILES: Complete file structure with descriptions
-        3. DEPENDENCIES: Python packages needed
-        4. TEST_FILES: Test files to create
+        2. FILES: Complete file structure with descriptions. Ensure 'language' field matches the tech stack.
+        3. DEPENDENCIES: Packages needed for the chosen stack.
+        4. TEST_FILES: Test files to create.
         5. ESTIMATED_TIME: Realistic time estimate
         
         Focus on main functionality first, then error handling and testing.

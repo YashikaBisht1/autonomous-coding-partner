@@ -17,10 +17,11 @@ class ProjectStatus(str, Enum):
 class ProjectState:
     """Manages project state"""
     
-    def __init__(self, project_id: str, project_name: str, goal: str):
+    def __init__(self, project_id: str, project_name: str, goal: str, tech_stack: List[str] = None):
         self.project_id = project_id
         self.project_name = project_name
         self.goal = goal
+        self.tech_stack = tech_stack or ["python"]
         self.status: ProjectStatus = ProjectStatus.PENDING
         self.created_at = datetime.now()
         self.updated_at = datetime.now()

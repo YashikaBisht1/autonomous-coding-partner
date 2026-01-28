@@ -27,14 +27,16 @@ class FixerAgent:
     async def fix_code(self, 
                       original_code: str, 
                       error_message: str,
-                      file_path: str) -> str:
+                      file_path: str,
+                      language: str = "python") -> str:
         """
         Fix code based on error message
         """
-        logger.info(f"Fixing code for: {file_path}")
+        logger.info(f"Fixing code for: {file_path} ({language})")
         
         prompt = f"""
         FIX CODE FOR FILE: {file_path}
+        LANGUAGE: {language}
         
         ORIGINAL CODE:
         {original_code[:3000]}
@@ -43,7 +45,7 @@ class FixerAgent:
         {error_message}
         
         Fix the code to resolve this error.
-        Maintain the original functionality.
+        Maintain the original functionality and follow {language} best practices.
         Add comments to explain your fix.
         """
         

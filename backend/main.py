@@ -88,6 +88,7 @@ async def create_project_task(project_id: str, project_data: ProjectCreate):
             project_id=project_id,
             project_name=project_data.project_name,
             goal=project_data.goal,
+            tech_stack=project_data.tech_stack,
             websocket_callback=ws_callback
         )
         
@@ -108,6 +109,17 @@ async def root():
         "status": "running"
     }
 
+@app.get("/api/config")
+async def get_config():
+    """Get system configuration"""
+    return {
+        "model": os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
+        "workspace": os.path.abspath(file_manager.workspace_path),
+        "backend_port": os.getenv("BACKEND_PORT", "8000"),
+        "frontend_port": os.getenv("FRONTEND_PORT", "3000"),
+        "active_agents": ["Planner", "Developer", "Tester", "Fixer"]
+    }
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
@@ -115,6 +127,24 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat()
     }
+
+@app.get("/api/projects")
+async def list_projects():
+    """List all projects in workspace"""
+    projects = []
+    workspace_path = file_manager.workspace_path
+    if workspace_path.exists():
+        for item in workspace_path.iterdir():
+            if item.is_dir():
+                # Try to get project name or use folder name
+                project_id = item.name
+                project_state = orchestrator.get_project_state(project_id)
+                projects.append({
+                    "project_id": project_id,
+                    "project_name": project_state.project_name if project_state else project_id,
+                    "created_at": datetime.fromtimestamp(item.stat().st_mtime).isoformat()
+                })
+    return projects
 
 @app.post("/api/projects", response_model=ProjectResponse)
 async def create_project(project_data: ProjectCreate, background_tasks: BackgroundTasks):
