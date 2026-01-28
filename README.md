@@ -76,7 +76,6 @@ This project served as a deep-dive into:
 - Efficient **Async/Await** patterns in Python.
 - Multi-agent communication and state synchronization.
 - AI **Self-Healing** loops and diagnostic feedback.
-- [Read the full Developer Lessons Guide here](./brain/developer_lessons.md).
 
 ---
 
