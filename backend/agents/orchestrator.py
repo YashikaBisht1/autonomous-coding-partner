@@ -69,20 +69,51 @@ class AgentOrchestrator:
                 project_state.add_file(file_path)
                 project_state.add_log("file_created", f"Created file: {file_path}", {"size": len(code)})
             
-            # Step 3: Testing (optional)
-            if plan.get("test_files"):
-                project_state.update_status(ProjectStatus.TESTING)
-                update_progress("testing", "Running tests...")
-                
-                # Simple test generation for now
-                for file_spec in plan.get("files", []):
-                    if file_spec.get("language") == "python":
-                        file_content = await file_manager.read_file(project_id, file_spec["path"])
-                        tests = await self.tester.create_tests(file_content, file_spec["path"], plan)
-                        test_path = f"test_{file_spec['path']}"
-                        await file_manager.save_file(project_id, test_path, tests)
+            # Step 3: Testing & Fixing (Iterative Loop)
+            project_state.update_status(ProjectStatus.TESTING)
+            update_progress("testing", "Generating and running tests...")
             
-            # Step 4: Completion
+            # For each generated file, try to test and fix it
+            for file_path in project_state.files:
+                if not file_path.endswith('.py'):
+                    continue
+                    
+                # Read generated code
+                code = await file_manager.read_file(project_id, file_path)
+                
+                # Generate tests
+                update_progress("testing", f"Creating tests for {file_path}...")
+                test_code = await self.tester.create_tests(code, file_path, plan)
+                test_file_name = f"test_{file_path}"
+                await file_manager.save_file(project_id, test_file_name, test_code)
+                
+                # Execute tests
+                workspace_path = file_manager.get_project_dir(project_id)
+                test_result = await self.tester.run_test_file(test_file_name, workspace_path)
+                
+                if test_result["success"]:
+                    update_progress("testing", f"✅ Tests passed for {file_path}")
+                    project_state.add_log("test_success", f"Tests passed for {file_path}")
+                else:
+                    # FIX LOOP (Maximum 2 attempts for now)
+                    for attempt in range(2):
+                        update_progress("fixing", f"🔧 Tests failed for {file_path}. Attempting fix {attempt+1}/2...")
+                        project_state.add_log("test_failure", f"Tests failed for {file_path}", {"error": test_result["error"]})
+                        
+                        # Fix code
+                        fixed_code = await self.fixer.fix_code(code, test_result["error"], file_path)
+                        await file_manager.save_file(project_id, file_path, fixed_code)
+                        code = fixed_code # Update for next attempt if needed
+                        
+                        # Re-run tests
+                        test_result = await self.tester.run_test_file(test_file_name, workspace_path)
+                        if test_result["success"]:
+                            update_progress("fixing", f"✅ Fixed {file_path} successfully!")
+                            break
+                    
+                    if not test_result["success"]:
+                        update_progress("warning", f"⚠️ Could not fix all issues in {file_path}")
+
             project_state.update_status(ProjectStatus.COMPLETED)
             update_progress("completed", "Project generation complete!", {
                 "files_count": len(project_state.files),

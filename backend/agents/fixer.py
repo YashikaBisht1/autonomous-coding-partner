@@ -3,7 +3,7 @@ Fixer Agent - Fixes bugs in code
 """
 import logging
 from typing import Dict, Any
-from groq_client import groq_client
+from groq_client import GroqClient
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +11,7 @@ class FixerAgent:
     """Agent that fixes bugs and errors"""
     
     def __init__(self):
+        self.groq_client = GroqClient()
         self.system_prompt = """You are a Senior Debugging Engineer.
         Fix bugs and errors in code based on test failures.
         
@@ -47,7 +48,7 @@ class FixerAgent:
         """
         
         try:
-            fixed_code = await groq_client.generate(
+            fixed_code = await self.groq_client.generate(
                 prompt=prompt,
                 system_prompt=self.system_prompt,
                 temperature=0.1,

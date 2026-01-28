@@ -55,6 +55,10 @@ class FileManager:
         logger.info(f"Created project directory: {project_dir}")
         return project_dir
 
+    def get_project_dir(self, project_id: str) -> str:
+        """Get the absolute path to a project directory"""
+        return str((self.workspace_path / project_id).resolve())
+
     async def save_file(self, project_id: str, file_path: str, content: str) -> bool:
         """Save a file to the project directory"""
         try:
