@@ -16,6 +16,8 @@ class ProjectCreate(BaseModel):
     project_name: str = Field(default="New Project", min_length=1)
     tech_stack: Optional[List[str]] = Field(default=["python"])
     requirements: Optional[List[str]] = Field(default=[])
+    style_guide: Optional[str] = Field(default=None, description="Custom style guide or rules")
+    spec_constraints: Optional[str] = Field(default=None, description="Strict architectural constraints")
 
 class ProjectResponse(BaseModel):
     """Schema for project response"""

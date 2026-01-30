@@ -83,7 +83,7 @@ class PlannerAgent:
             
         except Exception as e:
             logger.error(f"Error in planning: {e}")
-            return self._get_fallback_plan(project_name, project_goal, str(e))
+            raise
 
     def _get_fallback_plan(self, project_name: str, project_goal: str, error: str = None) -> Dict[str, Any]:
         """Return a basic plan as fallback"""

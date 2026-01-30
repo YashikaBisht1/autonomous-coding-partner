@@ -74,31 +74,51 @@ async def send_websocket_message(project_id: str, message_type: str, data: Dict[
 
 async def create_project_task(project_id: str, project_data: ProjectCreate):
     """Background task to create a project"""
-    try:
-        # WebSocket callback
-        async def ws_callback(message: Dict[str, Any]):
-            await send_websocket_message(project_id, message["type"], {
-                "step": message.get("step"),
-                "message": message.get("message"),
-                **message.get("data", {})
-            })
-        
-        # Create project using orchestrator
-        project_state = await orchestrator.create_project(
-            project_id=project_id,
-            project_name=project_data.project_name,
-            goal=project_data.goal,
-            tech_stack=project_data.tech_stack,
-            websocket_callback=ws_callback
-        )
-        
-        logger.info(f"✅ Project {project_id} completed successfully")
-        
-    except Exception as e:
-        logger.error(f"Error creating project {project_id}: {e}")
-        await send_websocket_message(project_id, "error", {
-            "message": f"Project failed: {str(e)}"
+    # WebSocket callback
+    async def ws_callback(message: Dict[str, Any]):
+        await send_websocket_message(project_id, message["type"], {
+            "step": message.get("step"),
+            "message": message.get("message"),
+            **message.get("data", {})
         })
+        
+    # Retry logic for Orchestrator crashes
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            # Create project using orchestrator
+            project_state = await orchestrator.create_project(
+                project_id=project_id,
+                project_name=project_data.project_name,
+                goal=project_data.goal,
+                tech_stack=project_data.tech_stack,
+                style_guide=project_data.style_guide,
+                spec_constraints=project_data.spec_constraints,
+                websocket_callback=ws_callback
+            )
+            
+            logger.info(f"✅ Project {project_id} completed successfully")
+            break # Success
+            
+        except Exception as e:
+            logger.error(f"Error creating project {project_id} (Attempt {attempt+1}/{max_retries}): {e}")
+            
+            if attempt < max_retries - 1:
+                # Cleanup / Reset state before retry
+                await send_websocket_message(project_id, "warning", {
+                    "message": f"Orchestrator encountered an error. Retrying... ({attempt+1}/{max_retries})"
+                })
+                # Optional: We could reset the project state here if we had a method for it
+                # For now, we just wait a bit
+                import asyncio
+                await asyncio.sleep(2)
+            else:
+                # Final failure
+                await send_websocket_message(project_id, "error", {
+                    "message": f"Project failed after {max_retries} attempts: {str(e)}"
+                })
+                raise # Re-raise to let background task handling know (though it just logs)
 
 @app.get("/")
 async def root():
@@ -138,7 +158,7 @@ async def list_projects():
             if item.is_dir():
                 # Try to get project name or use folder name
                 project_id = item.name
-                project_state = orchestrator.get_project_state(project_id)
+                project_state = await orchestrator.get_project_state(project_id)
                 projects.append({
                     "project_id": project_id,
                     "project_name": project_state.project_name if project_state else project_id,
@@ -167,7 +187,7 @@ async def create_project(project_data: ProjectCreate, background_tasks: Backgrou
 @app.get("/api/projects/{project_id}")
 async def get_project(project_id: str):
     """Get project status"""
-    project_state = orchestrator.get_project_state(project_id)
+    project_state = await orchestrator.get_project_state(project_id)
     if not project_state:
         raise HTTPException(status_code=404, detail="Project not found")
     
@@ -178,6 +198,31 @@ async def get_project_files(project_id: str):
     """Get list of files in project"""
     files = file_manager.get_project_files(project_id)
     return {"project_id": project_id, "files": files}
+
+@app.post("/api/projects/{project_id}/analyze")
+async def analyze_project(project_id: str):
+    """Analyze an existing project's codebase"""
+    try:
+        analysis = await orchestrator.analyze_project(project_id)
+        return {"project_id": project_id, "analysis": analysis}
+    except Exception as e:
+        logger.error(f"Analysis failed for {project_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/projects/{project_id}/files")
+async def save_file_content(project_id: str, file_data: Dict[str, Any]):
+    """Save file content"""
+    try:
+        path = file_data.get("path")
+        content = file_data.get("content")
+        if not path or content is None:
+            raise HTTPException(status_code=400, detail="Missing path or content")
+        
+        await file_manager.save_file(project_id, path, content)
+        return {"status": "success", "path": path}
+    except Exception as e:
+        logger.error(f"Failed to save file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/projects/{project_id}/files/{file_path:path}")
 async def get_file_content(project_id: str, file_path: str):
@@ -193,6 +238,26 @@ async def get_file_content(project_id: str, file_path: str):
         "size": len(content)
     }
 
+@app.post("/api/projects/{project_id}/dojo/challenge")
+async def start_dojo_challenge(project_id: str):
+    """Start a Dojo challenge"""
+    try:
+        challenge = await orchestrator.start_dojo_challenge(project_id)
+        return challenge
+    except Exception as e:
+        logger.error(f"Failed to start Dojo challenge: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/projects/{project_id}/dojo/verify")
+async def verify_dojo_challenge(project_id: str):
+    """Verify Dojo challenge fix"""
+    try:
+        result = await orchestrator.verify_dojo_fix(project_id)
+        return result
+    except Exception as e:
+        logger.error(f"Dojo verification failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.websocket("/ws/projects/{project_id}")
 async def websocket_endpoint(websocket: WebSocket, project_id: str):
     """WebSocket for real-time updates"""
@@ -205,7 +270,7 @@ async def websocket_endpoint(websocket: WebSocket, project_id: str):
     
     try:
         # Send initial project state if exists
-        project_state = orchestrator.get_project_state(project_id)
+        project_state = await orchestrator.get_project_state(project_id)
         if project_state:
             await websocket.send_json({
                 "type": "state",

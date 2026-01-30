@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import ProjectForm from './components/ProjectForm';
 import AgentConsole from './components/AgentConsole';
 import CodeViewer from './components/CodeViewer';
-import { createProject, getProjectStatus, listProjects, getConfig } from './services/api';
+import AnalysisView from './components/AnalysisView';
+import DojoView from './components/DojoView';
+import { createProject, getProjectStatus, listProjects, getConfig, analyzeProject, startDojoChallenge, verifyDojoChallenge } from './services/api';
 
 function App() {
   const [projectId, setProjectId] = useState(null);
@@ -13,6 +15,36 @@ function App() {
   const [projects, setProjects] = useState([]);
   const [config, setConfig] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
+  const [currentAnalysis, setCurrentAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentChallenge, setCurrentChallenge] = useState(null);
+  const [isStartingChallenge, setIsStartingChallenge] = useState(false);
+  const [editingFile, setEditingFile] = useState(null);
+  const [editedCode, setEditedCode] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveFile = async () => {
+    if (!editingFile || !projectId) return;
+    setIsSaving(true);
+    try {
+      await fetch(`http://localhost:8000/api/projects/${projectId}/files`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: editingFile,
+          content: editedCode
+        })
+      });
+      // Refresh project state to show changes (optional but good)
+      const data = await getProjectStatus(projectId);
+      setProjectState(data);
+      setEditingFile(null);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     let interval;
@@ -75,6 +107,36 @@ function App() {
     }
   };
 
+  const handleAnalyze = async (id) => {
+    setIsAnalyzing(true);
+    setCurrentAnalysis(null);
+    setCurrentView('ANALYSIS');
+    try {
+      const data = await analyzeProject(id);
+      console.log('Analysis data received:', data);
+      setCurrentAnalysis(data.analysis);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      // Fallback/Error state could be added here
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleStartDojo = async (id) => {
+    setIsStartingChallenge(true);
+    setProjectId(id);
+    try {
+      const data = await startDojoChallenge(id);
+      setCurrentChallenge(data);
+      setCurrentView('DOJO');
+    } catch (error) {
+      console.error('Failed to start Dojo:', error);
+    } finally {
+      setIsStartingChallenge(false);
+    }
+  };
+
   const renderDashboard = () => (
     <main style={{
       flex: 1,
@@ -126,7 +188,59 @@ function App() {
       {projectId && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <AgentConsole logs={logs} />
-          <CodeViewer files={projectState?.files || []} />
+          <CodeViewer
+            files={projectState?.files || []}
+            onFileClick={async (f) => {
+              const res = await fetch(`http://localhost:8000/api/projects/${projectId}/files/${f}`);
+              const data = await res.json();
+              setEditingFile(f);
+              setEditedCode(data.content);
+            }}
+          />
+        </div>
+      )}
+
+      {editingFile && (
+        <div className="ide-panel animate-fade-in" style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '90vw',
+          height: '80vh',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '1.5rem',
+          boxShadow: '0 0 50px rgba(0,0,0,0.8)',
+          border: '2px solid var(--primary)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>EDITING: {editingFile}</div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={handleSaveFile} disabled={isSaving} className="pink-glow" style={{ padding: '0.5rem 1rem' }}>
+                {isSaving ? 'SAVING...' : 'SAVE_CHANGES'}
+              </button>
+              <button onClick={() => setEditingFile(null)} style={{ background: 'transparent', border: '1px solid #444' }}>CLOSE</button>
+            </div>
+          </div>
+          <textarea
+            value={editedCode}
+            onChange={(e) => setEditedCode(e.target.value)}
+            spellCheck="false"
+            style={{
+              flex: 1,
+              background: '#0d0d0d',
+              color: '#00d9ff',
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              padding: '1rem',
+              resize: 'none',
+              border: '1px solid #333',
+              outline: 'none',
+              lineHeight: '1.5'
+            }}
+          />
         </div>
       )}
     </main>
@@ -164,7 +278,37 @@ function App() {
                 <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{p.project_name}</div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ID: {p.project_id} // CREATED: {new Date(p.created_at).toLocaleString()}</div>
               </div>
-              <button style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}>OPEN_SESSION</button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProjectId(p.project_id);
+                    setCurrentView('DASHBOARD');
+                  }}
+                >
+                  OPEN
+                </button>
+                <button
+                  className="pink-glow"
+                  style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem', background: 'transparent', border: '1px solid var(--primary)' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAnalyze(p.project_id);
+                  }}
+                >
+                  {isAnalyzing ? '...' : 'ANALYZE'}
+                </button>
+                <button
+                  style={{ fontSize: '0.7rem', padding: '0.4rem 0.8rem', background: 'var(--secondary)', color: 'white', border: 'none' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartDojo(p.project_id);
+                  }}
+                >
+                  {isStartingChallenge ? '...' : 'ENTER_DOJO'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -253,6 +397,13 @@ function App() {
       {currentView === 'DASHBOARD' && renderDashboard()}
       {currentView === 'PROJECTS' && renderProjects()}
       {currentView === 'SETTINGS' && renderSettings()}
+      {currentView === 'ANALYSIS' && <AnalysisView analysis={currentAnalysis} onBack={() => setCurrentView('PROJECTS')} />}
+      {currentView === 'DOJO' && <DojoView
+        projectId={projectId}
+        challenge={currentChallenge}
+        onBack={() => setCurrentView('PROJECTS')}
+        onVerify={() => verifyDojoChallenge(projectId)}
+      />}
 
       <footer style={{
         marginTop: 'auto',

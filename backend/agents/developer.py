@@ -87,4 +87,4 @@ class DeveloperAgent:
             
         except Exception as e:
             logger.error(f"Error writing file {file_path}: {e}")
-            return f"# Error generating code: {str(e)}\n# File: {file_path}\n# TODO: Implement this file"
+            raise

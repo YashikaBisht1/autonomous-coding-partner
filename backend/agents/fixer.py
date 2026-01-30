@@ -71,4 +71,4 @@ class FixerAgent:
             
         except Exception as e:
             logger.error(f"Error fixing code for {file_path}: {e}")
-            return original_code  # Return original if fix fails
+            raise

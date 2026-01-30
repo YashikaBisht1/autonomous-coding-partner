@@ -1,6 +1,6 @@
 import React from 'react';
 
-function CodeViewer({ files }) {
+function CodeViewer({ files, onFileClick }) {
   if (!files || files.length === 0) return null;
 
   return (
@@ -22,6 +22,7 @@ function CodeViewer({ files }) {
               transition: 'border-color 0.2s',
               cursor: 'pointer'
             }}
+              onClick={() => onFileClick?.(file)}
               onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-dim)'}
             >
@@ -30,8 +31,8 @@ function CodeViewer({ files }) {
                 <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{file}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PROJECT_ASSET</div>
               </div>
-              <div style={{ fontSize: '0.6rem', padding: '2px 6px', border: '1px solid #444', color: '#888' }}>
-                READONLY
+              <div style={{ fontSize: '0.6rem', padding: '2px 6px', border: '1px solid var(--primary)', color: 'var(--primary)' }}>
+                EDITABLE
               </div>
             </div>
           ))}

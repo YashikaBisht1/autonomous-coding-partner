@@ -25,3 +25,22 @@ export const getConfig = async () => {
   const response = await fetch(`${API_URL}/config`);
   return response.json();
 };
+export const analyzeProject = async (projectId) => {
+  const response = await fetch(`${API_URL}/projects/${projectId}/analyze`, {
+    method: 'POST',
+  });
+  return response.json();
+};
+export const startDojoChallenge = async (projectId) => {
+  const response = await fetch(`${API_URL}/projects/${projectId}/dojo/challenge`, {
+    method: 'POST',
+  });
+  return response.json();
+};
+
+export const verifyDojoChallenge = async (projectId) => {
+  const response = await fetch(`${API_URL}/projects/${projectId}/dojo/verify`, {
+    method: 'POST',
+  });
+  return response.json();
+};

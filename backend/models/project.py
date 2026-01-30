@@ -11,6 +11,8 @@ class ProjectStatus(str, Enum):
     PLANNING = "planning"
     CODING = "coding"
     TESTING = "testing"
+    ANALYZING = "analyzing"
+    DOJO = "dojo_mode"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -29,6 +31,26 @@ class ProjectState:
         self.files: List[str] = []
         self.errors: List[str] = []
         self.logs: List[Dict[str, Any]] = []
+        self.metadata: Dict[str, Any] = {}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ProjectState':
+        """Recreate project state from dictionary"""
+        state = cls(
+            project_id=data["project_id"],
+            project_name=data["project_name"],
+            goal=data["goal"],
+            tech_stack=data.get("tech_stack", ["python"])
+        )
+        state.status = ProjectStatus(data["status"])
+        state.created_at = datetime.fromisoformat(data["created_at"])
+        state.updated_at = datetime.fromisoformat(data["updated_at"])
+        state.tasks = data.get("tasks", [])
+        state.files = data.get("files", [])
+        state.errors = data.get("errors", [])
+        state.logs = data.get("logs", [])
+        state.metadata = data.get("metadata", {})
+        return state
     
     def update_status(self, status: ProjectStatus):
         """Update project status"""
@@ -68,5 +90,6 @@ class ProjectState:
             "tasks": self.tasks,
             "files": self.files,
             "errors": self.errors,
-            "logs": self.logs
+            "logs": self.logs,
+            "metadata": self.metadata
         }

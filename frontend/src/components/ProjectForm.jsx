@@ -4,6 +4,8 @@ function ProjectForm({ onSubmit, isLoading }) {
   const [projectName, setProjectName] = useState('');
   const [goal, setGoal] = useState('');
   const [techStack, setTechStack] = useState('Python');
+  const [styleGuide, setStyleGuide] = useState('');
+  const [specConstraints, setSpecConstraints] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -12,7 +14,9 @@ function ProjectForm({ onSubmit, isLoading }) {
     onSubmit({
       project_name: projectName,
       goal: goal,
-      tech_stack: techStack.split(',').map(s => s.trim())
+      tech_stack: techStack.split(',').map(s => s.trim()),
+      style_guide: styleGuide,
+      spec_constraints: specConstraints
     });
   };
 
@@ -55,6 +59,34 @@ function ProjectForm({ onSubmit, isLoading }) {
             onChange={(e) => setTechStack(e.target.value)}
           />
         </div>
+
+        <details style={{ marginTop: '0.5rem' }}>
+          <summary style={{ fontSize: '0.75rem', color: 'var(--text-pink)', cursor: 'pointer', fontWeight: 'bold' }}>
+            ADVANCED_CONSTRAINTS // [PHASE_3]
+          </summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem', padding: '1rem', border: '1px solid #222' }}>
+            <div>
+              <label style={{ fontSize: '0.65rem' }}>STYLE_GUIDE_PREFS</label>
+              <textarea
+                placeholder="e.g. Use CamelCase for all functions, No comments allowed..."
+                value={styleGuide}
+                onChange={(e) => setStyleGuide(e.target.value)}
+                rows={2}
+                style={{ fontSize: '0.8rem' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.65rem' }}>ARCHITECTURAL_CONSTRAINTS</label>
+              <textarea
+                placeholder="e.g. Use Repository Pattern, Minimal dependencies..."
+                value={specConstraints}
+                onChange={(e) => setSpecConstraints(e.target.value)}
+                rows={2}
+                style={{ fontSize: '0.8rem' }}
+              />
+            </div>
+          </div>
+        </details>
 
         <div style={{ marginTop: '1rem' }}>
           <button type="submit" disabled={isLoading} style={{ width: '100%' }}>

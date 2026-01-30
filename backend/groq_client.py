@@ -75,22 +75,43 @@ class GroqClient:
 
         try:
             logger.info("Sending request to Groq API with %s chars", len(prompt))
-
-            async with self._semaphore:
-                response = await self._create_completion(
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
+            
+            # Retry logic for rate limits
+            max_retries = 3
+            base_delay = 2
+            
+            for attempt in range(max_retries):
+                try:
+                    async with self._semaphore:
+                        response = await self._create_completion(
+                            messages=messages,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                        )
+                    break # Success, exit loop
+                    
+                except Exception as e:
+                    # Check for rate limit (Groq usually behaves like OpenAI, 429)
+                    # We'll check the error string or type since we don't have the explicit type imported here easily
+                    error_str = str(e).lower()
+                    if "rate limit" in error_str or "429" in error_str:
+                        if attempt < max_retries - 1:
+                            wait_time = base_delay * (2 ** attempt)
+                            logger.warning(f"Groq Rate Limit hit. Retrying in {wait_time}s... (Attempt {attempt+1}/{max_retries})")
+                            await asyncio.sleep(wait_time)
+                            continue
+                    
+                    # If not rate limit or retries exhausted, re-raise
+                    logger.error(f"Groq API error: {e}")
+                    raise
 
             result = response.choices[0].message.content
             logger.info("Received response of %s chars", len(result))
             return result
 
         except Exception as e:
-            # Log full details on the server, but return a generic error message.
-            logger.exception("Groq API error while generating completion")
-            return f"Error: Groq API request failed: {str(e)}"
+            logger.error(f"Groq API error after retries: {e}")
+            raise
 
     async def generate_structured(
         self,

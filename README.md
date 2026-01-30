@@ -24,6 +24,28 @@ An advanced, self-healing Autonomous Development Environment (ADE) wrapped in a 
 - **Developer Agent**: Generating production-ready code across multiple stacks.
 - **Tester Agent**: Autonomously creating unit tests for every file.
 - **Fixer Agent**: Real-time debugging and self-healing when tests fail.
+- **Enforcer Agent**: Strict compliance checking against style guides and specs.
+- **Analyzer Agent**: Deep static analysis and architectural visualization.
+- **Saboteur Agent**: Injects logic bugs for "Dojo Mode" training and challenges.
+
+### 🏗️ SYSTEM_ARCHITECTURE
+```mermaid
+graph TD
+    User[User / Frontend] -->|Prompt| Orch[Agent Orchestrator]
+    Orch -->|Plan| Planner
+    Orch -->|Code| Dev[Developer]
+    Orch -->|Review| Enforcer
+    Orch -->|Verify| Tester
+    Tester -->|Fail| Fixer
+    Fixer -->|Patch| Dev
+    Tester -->|Pass| Analyzer
+    Analyzer -->|Visuals| User
+    
+    subgraph "Dojo Mode"
+    Orch -->|Sabotage| Saboteur
+    Saboteur -->|Bug| User
+    end
+```
 
 ### 🌍 Multi-Stack Agnostic
 - Full support for **Python**, **Node.js (JS/TS)**, and **Go**.
